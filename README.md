@@ -1,54 +1,14 @@
 # How to Use Amazon EFS with Amazon Lightsail
 
-In this guide I will describe how to mount an EFS drive on a Lightsail instamce. EFS is apopular choice for shared file systems which enamle scalability and fault tolerance. 
-
-For the purpose of this guide, I will use an Ubuntu 18.04 instance blueprint. The same concepts apply to other Linux instance types, the comands may differ slightly. This guide is also applicable to Applictaion instance blueprints like Wordpress, Drupal, and Magento. This guide does not apply to Windows instances. 
-
-What is EFS? EFS is ...
-
-EFS is accessible via mount points in a VPC. EFS clients are required to access EFS throught the associated VPC, either frm within the VPC itself or through a VPC peering connection or a Transit Gateway. 
-
-In this guide I will demonstrate a Lightsail instance connecting to en EFS through a VPC Peering connection. 
-
-Trhoughtou this guide I will be using the AWS CLI. To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup) and must the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and [jq](https://stedolan.github.io/jq/) on your system. Follow the provided links if you don't have some of those.
-
-You can also accomplish the same using the AWS web console. 
-
-
-
-
-1. EFS is accessible from a VPC
-2. Lightsail runs in a VPC (but i't a VPC in a shadow account)
-3. Must VPC peer Lightsail VPC to your default VPC to access EFS
-4. Updated default security group to allow NFS port 2049 access from Lightsail VPC to default VPC (and EFS)  
-5. Create mount point on Lightsail instance, use NFS to mount to EFS
-   YMMV depending on OS    
-6. 
+In this guide I will describe how to mount an EFS drive on a Lightsail instamce.
 
 ```
-aws ec2 describe-vpcs | jq '.Vpcs[] | select (.IsDefault == true) | .VpcId' | sed -e 's/^"//' -e 's/"$//'
-
-also returns vpcid
-aws lightsail peer-vpc
-vpc-a58d50dd
-
-aws ec2 describe-subnets --filters Name=vpc-id,Values=vpc-a58d50dd | jq '.Subnets[].SubnetId'
-
-aws efs create-mount-target --file-system-id fs-fe72bcfa --subnet-id subnet-f7dbf48e
-
-aws ec2 describe-security-groups --filters Name=vpc-id,Values=vpc-a58d50dd --group-names default | jq -r '.SecurityGroups[].GroupId'
-
-aws ec2 describe-vpc-peering-connections --filters Name=requester-vpc-info.vpc-id,Values=vpc-070db2c1bd58b01a7 | jq -r '.VpcPeeringConnections[0].RequesterVpcInfo.CidrBlock'
-
-aws ec2 authorize-security-group-ingress --group-id sg-b2bab5c5 --protocol tcp --port 2049 --cidr 172.26.0.0/16
-
 vpcs=($(aws lightsail peer-vpc | jq -r '.operation.resourceName, .operation.operationDetails'))
-
 ```
 
-In this guide, you'll learn how to configure a Flask web server behind an Nginx reverse proxy using Lightsail containers. The Nginx reverse proxy accepts web requests on port 80 and forwards them to the Flask web server on port 5000. The Flask web server fulfills the requests and return the response to Nginx. A Lightsail container service will be created to host both the Nginx and the Flask containers. A public endpoint will be created to allow external access to the Nginx server. 
+To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup) and must install the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and [jq](https://stedolan.github.io/jq/)) on your system. Follow the provided links if you don't have some of those.
 
-To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup) and must install [Docker](https://docs.docker.com/engine/install/), [Docker compose](https://docs.docker.com/compose/install/), the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and the [Lightsail Control (lightsailctl) plugin](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-install-software) on your system. Follow the provided links if you don't have some of those.
+Let's get started. 
 
 ## 1. Creating a peering connection between the Lightsail VPC and the default VPC
    Peer the Lightsail VPC with the Default VPC in the region with the  [peer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/peer-vpc.html) command. Use jq to extract the VPC IDs for later use. 
