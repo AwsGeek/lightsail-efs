@@ -2,15 +2,11 @@
 
 In this guide I will describe how to mount an EFS drive on a Lightsail instamce.
 
-```
-vpcs=($(aws lightsail peer-vpc | jq -r '.operation.resourceName, .operation.operationDetails'))
-```
-
 To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup) and must install the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and [jq](https://stedolan.github.io/jq/)) on your system. Follow the provided links if you don't have some of those.
 
 Let's get started. 
 
-## 1. Creating a peering connection between the Lightsail VPC and the default VPC
+## 1. Create a peering connection between the Lightsail VPC and the default VPC
    Peer the Lightsail VPC with the Default VPC in the region with the  [peer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/peer-vpc.html) command. Use jq to extract the VPC IDs for later use. 
 
 
@@ -21,6 +17,10 @@ Let's get started.
    <Default VPC ID>
    ```
    A peering connection is required for a Lightsail instance to connect to an EFS file system. 
+
+   ```
+   vpcs=($(aws lightsail peer-vpc | jq -r '.operation.resourceName, .operation.operationDetails'))
+   ```
 
 ## 2. Create an EFS file system
 
@@ -83,6 +83,7 @@ Let's get started.
 
 ## 5. Connect a Lightsail instance to the EFS file system
 
+   Open a terminal window to your Linux based Lightsail instance using the 
 
 
    Congratulations. You have successfully connected your Lightsail instances to a shared EFS file system. 
