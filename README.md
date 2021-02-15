@@ -104,35 +104,34 @@ To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billi
 
 ## Cleanup
 
-Complete the following steps to the Lightsail container service that you created as part of this tutorial.
+Complete the following steps to cleanup resources you created in this guide.
 
-   1. Unpeer the Lightsail and default VPCs using the  [unpeer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/unpeer-vpc.html) command.  
+Unpeer the Lightsail and default VPCs using the  [unpeer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/unpeer-vpc.html) command.
 
 
-   ```
-   $ aws lightsail unpeer-vpc'
-   ```
+```
+$ aws lightsail unpeer-vpc'
+```
 
-   2. Remove the mount tarets for the EFS file system by first using the [describe-mount-targets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/describe-mount-targets.html) command to get the mount target IDs  
+Remove the mount tarets for the EFS file system by first using the [describe-mount-targets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/describe-mount-targets.html) command to get the mount target IDs  
    
-   ```
-   $ aws efs describe-mount-targets --file-system-id <EFS File System ID>'
+```
+$ aws efs describe-mount-targets --file-system-id <EFS File System ID>'
 
-   <Mount Target 1 ID>
-   <Mount Target 2 ID>
-   ...
-   <Mount Target X ID>
-   ```
+<Mount Target 1 ID>
+<Mount Target 2 ID>
+...
+<Mount Target X ID>
+```
 
-    Then us the [delete-mount-target](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/delete-mount-target.html) command to delete the individual mount targets.
+Then use the [delete-mount-target](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/delete-mount-target.html) command to delete the individual mount targets.
 
-   ```
-   $ aws efs delete-mount-target --mount-target-id <Mount Target ID>'
-   ```
+```
+$ aws efs delete-mount-target --mount-target-id <Mount Target ID>'
+```
 
-    3. Finally, delete the EFS file system using the [delete-file-system](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/delete-file-system.html)
+Finally, delete the EFS file system using the [delete-file-system](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/delete-file-system.html)
 
-   ```
-   $ aws efs delete-file-system --file-system-id <EFS File System ID>'
-   ```
-   
+```
+$ aws efs delete-file-system --file-system-id <EFS File System ID>'
+```
