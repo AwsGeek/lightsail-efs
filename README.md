@@ -110,7 +110,7 @@ Unpeer the Lightsail and default VPCs using the  [unpeer-vpc](https://awscli.ama
 
 
 ```
-$ aws lightsail unpeer-vpc'
+$ aws lightsail unpeer-vpc
 ```
 
 Remove the mount tarets for the EFS file system by first using the [describe-mount-targets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/describe-mount-targets.html) command to get the mount target IDs  
@@ -127,11 +127,11 @@ $ aws efs describe-mount-targets --file-system-id <EFS File System ID>'
 Then use the [delete-mount-target](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/delete-mount-target.html) command to delete the individual mount targets.
 
 ```
-$ aws efs delete-mount-target --mount-target-id <Mount Target ID>'
+$ aws efs delete-mount-target --mount-target-id <Mount Target ID>
 ```
 
 Finally, delete the EFS file system using the [delete-file-system](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/delete-file-system.html)
 
 ```
-$ aws efs delete-file-system --file-system-id <EFS File System ID>'
+$ aws efs delete-file-system --file-system-id <EFS File System ID>
 ```
