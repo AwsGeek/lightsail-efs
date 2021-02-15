@@ -116,7 +116,7 @@ $ aws lightsail unpeer-vpc
 Remove the mount tarets for the EFS file system by first using the [describe-mount-targets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/describe-mount-targets.html) command to get the mount target IDs  
    
 ```
-$ aws efs describe-mount-targets --file-system-id <EFS File System ID>'
+$ aws efs describe-mount-targets --file-system-id <EFS File System ID>
 
 <Mount Target 1 ID>
 <Mount Target 2 ID>
