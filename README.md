@@ -1,6 +1,6 @@
 # How to Use Amazon EFS with Amazon Lightsail
 
-To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup). To complete this guide you must install the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and [jq](https://stedolan.github.io/jq/)) on your system. Follow the provided links if you don't have some of those.
+To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup). To complete this guide you must install the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and have [jq](https://stedolan.github.io/jq/) on your system. jq will be used to extract information from JSON returned by AWS CLI comments. Follow the provided links if you don't have some of those.
 
 ## 1. Peer the Lightsail VPC with the default VPC
 
@@ -14,6 +14,7 @@ To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billi
    <Default VPC ID>
    ```
 
+Note: You can run this command and other AWS CLI commands in this guide without using jq, but will need to extract information manually.
 
 ## 2. Create an EFS file system
 
@@ -25,7 +26,7 @@ To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billi
    <EFS File System ID>
    ```
 
-   This command creates a new general purpose file system with bursting throughput mode. Additional options are available if you want to use a difference file system performance model, encryption strategy, or throughput mode.
+   This command creates a new general purpose file system with bursting throughput mode. Additional options are available if you want to use a difference file system performance model, encryption strategy, or throughput mode. For more information see the [EFS documentation](https://docs.aws.amazon.com/efs/index.html). 
 
 ## 3. Create EFS mount points in each availability zone
 
