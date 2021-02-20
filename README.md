@@ -114,7 +114,7 @@ Unpeer the Lightsail and default VPCs using the  [unpeer-vpc](https://awscli.ama
 $ aws lightsail unpeer-vpc
 ```
 
-Remove the mount tarets for the EFS file system by first using the [describe-mount-targets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/describe-mount-targets.html) command to get the mount target IDs  
+Remove the mount targets for the EFS file system by first using the [describe-mount-targets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/describe-mount-targets.html) command to get the mount target IDs  
    
 ```
 $ aws efs describe-mount-targets --file-system-id <EFS File System ID>
