@@ -12,9 +12,9 @@ To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billi
 
 ## 1. Peer the Lightsail VPC with the default VPC
 
-Lightsail can use VPC peering to connect to other AWS services. VPC peering creates a network connection between the Lightsail VPC and the region's default VPC, providing a secure communication link that allows Lightsail instances to access other AWS services.
+Lightsail can use VPC peering to connect to other AWS services. The Lightsail VPC peer command creates a network connection between the Lightsail VPC and the region's default VPC, providing a secure communication link that allows Lightsail instances to access other AWS services in the default VPC.
 
-Peer the Lightsail and default VPCs using the  [peer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/peer-vpc.html) command. Use ```jq``` to extract the ```<Lightsail VPC ID>``` and ```<Default VPC ID>``` for later use. 
+Peer the Lightsail and default VPCs using the Lightsail [peer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/peer-vpc.html) command. Use ```jq``` to extract the ```<Lightsail VPC ID>``` and ```<Default VPC ID>``` for later use. 
 
 ```
 $ aws lightsail peer-vpc | jq -r '.operation.resourceName, .operation.operationDetails'
@@ -43,7 +43,7 @@ This command creates a new general purpose file system with bursting throughput 
 
 EFS mount targets allow you to mount an Amazon EFS file system from your Lightsail instance. You should create a mount target for each AZ that your Lightsail instances are lcoated in . Lightsail instances should connect to the EFS mount target in the same AZ. 
 
-Obtain subnet information for the default VPC using the [describe-subnets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-subnets.html) command. Provide the ```<Default VPC ID>``` obtained previously. Use '''jq''' to extract the ```<subnet X ID>```s for later use. 
+Obtain subnet information for the default VPC using the [describe-subnets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-subnets.html) command. Provide the ```<Default VPC ID>``` obtained previously. Use ```jq``` to extract the ```<subnet X ID>```s for later use. 
 
 ```
 $ aws ec2 describe-subnets --filters Name=vpc-id,Values=<Default VPC ID> Name=default-for-az,Values=true | jq -r '.Subnets[].SubnetId'
@@ -54,7 +54,7 @@ $ aws ec2 describe-subnets --filters Name=vpc-id,Values=<Default VPC ID> Name=de
 <subnet X ID>
 ```
 
-Create an EFS mount target in each of the default subnets using the [create-mount-target](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/create-mount-target.html) command.  Use '''jq''' to extract the ```<EFS Mount Point IP Address>``` for later use.
+Create an EFS mount target in each of the default subnets using the [create-mount-target](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/create-mount-target.html) command.  Use ```jq``` to extract the ```<EFS Mount Point IP Address>``` for later use.
 
 ```
 $ aws efs create-mount-target --file-system-id <EFS File System ID> --subnet-id <Subnet ID> | jq -r '.IpAddress'
@@ -68,7 +68,7 @@ Note: If you don't have Lightsail instances in some AZs, you don't need to creat
 
 ## 4. Create a rule allowing Lightsail to connect to EFS
 
-Identify the VPC CIDR block for the Lightsail VPC using the [describe-vpc-peering-connections](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-vpc-peering-connections.html) command. Use '''jq''' to extract the ```<Lightsail VPC CIDR>``` block for later use.
+Identify the VPC CIDR block for the Lightsail VPC using the [describe-vpc-peering-connections](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-vpc-peering-connections.html) command. Use ```jq``` to extract the ```<Lightsail VPC CIDR>``` block for later use.
 
 ```
 $ aws ec2 describe-vpc-peering-connections --filters Name=requester-vpc-info.vpc-id,Values=<Lightsail VPC ID> | jq -r '.VpcPeeringConnections[0].RequesterVpcInfo.CidrBlock'
@@ -76,7 +76,7 @@ $ aws ec2 describe-vpc-peering-connections --filters Name=requester-vpc-info.vpc
 <Lightsail VPC CIDR>
 ```
 
-Identify the default security group for the default VPC using the [describe-security-groups](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-security-groups.html) command. Use '''jq''' to extract the ```<Default Security Group ID>``` for later use.
+Identify the default security group for the default VPC using the [describe-security-groups](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-security-groups.html) command. Use ```jq``` to extract the ```<Default Security Group ID>``` for later use.
 
 ```
 $ aws ec2 describe-security-groups --filters Name=vpc-id,Values=<Default VPC ID> --group-names default | jq -r '.SecurityGroups[].GroupId'
