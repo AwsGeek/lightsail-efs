@@ -1,113 +1,135 @@
 # How to Use Amazon EFS with Amazon Lightsail
 
-To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup). To complete this guide you must install the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and have [jq](https://stedolan.github.io/jq/) on your system. jq will be used to extract information from JSON returned by AWS CLI comments. Follow the provided links if you don't have some of those.
+Amazon Lightsail is a virtual private server (VPS) and is the easiest way to get started with AWS for developers, small businesses, students, and other users who need a solution to build and host their applications on cloud. Amazon Lightsail is ...
+
+Amazon EFS is a simple, serverless, set-and-forget, elastic file system that makes it easy to set up, scale, and cost-optimize file storage in the AWS Cloud.
+
+In this guide I'll show how create and connect to an EFS file system from one or more Lightsail instances. This allows you to build resilient, highly available applications on Lightsail that can easily scale.  
+
+## Getting started
+
+To get started, you'll need an [AWS account](https://portal.aws.amazon.com/billing/signup). To complete this guide you must install the [AWS Command Line Interface (CLI) tool](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and have [jq](https://stedolan.github.io/jq/) on your system. In this guide I'll be using jq to extract information returned by AWS CLI comments in JSON format. If you don't have an AWS account, the AWS CLI, or jq, follow the provided links to get them before proceding further.
 
 ## 1. Peer the Lightsail VPC with the default VPC
 
-   1. Peer the Lightsail and default VPCs using the  [peer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/peer-vpc.html) command. Use jq to extract the VPC IDs for later use. 
+Lightsail can use VPC peering to connect to other AWS services. VPC peering creates a network connection between the Lightsail VPC and the region's default VPC, providing a secure communication link that allows Lightsail instances to access AWS services.
+
+Peer the Lightsail and default VPCs using the  [peer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/peer-vpc.html) command. Use jq to extract the ```<Lightsail VPC ID>``` and ```<Default VPC ID>``` for later use. 
 
 
-   ```
-   $ aws lightsail peer-vpc | jq -r '.operation.resourceName, .operation.operationDetails'
+```
+$ aws lightsail peer-vpc | jq -r '.operation.resourceName, .operation.operationDetails'
 
-   <Lightsail VPC ID>
-   <Default VPC ID>
-   ```
+<Lightsail VPC ID>
+<Default VPC ID>
+```
 
-Note: You can run this command and other AWS CLI commands in this guide without using jq, but will need to extract information manually.
+Note: I use ```<Identifier>``` throughout this guide to indicate the results returned by jq. jq parses the JSON response returned by by AWS CLI commands.
+
+Note: You can run this command and other AWS CLI commands in this guide without using jq, but will need to extract information from the JSON returned by AWS CLI commands yourself.
 
 ## 2. Create an EFS file system
 
-   Create a new file system with the [create-file-system](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/create-file-system.html) command. Use jq to extract the file system ID for later use. 
+Create a new file system with the [create-file-system](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/create-file-system.html) command. Use jq to extract the ```<EFS File System ID>``` for later use. 
 
-   ```
-   $ aws efs create-file-system | jq -r '.FileSystemId'
+```
+$ aws efs create-file-system | jq -r '.FileSystemId'
    
-   <EFS File System ID>
-   ```
+<EFS File System ID>
+```
 
-   This command creates a new general purpose file system with bursting throughput mode. Additional options are available if you want to use a difference file system performance model, encryption strategy, or throughput mode. For more information see the [EFS documentation](https://docs.aws.amazon.com/efs/index.html). 
+This command creates a new general purpose file system with bursting throughput mode. Additional options are available if you want to use a difference file system performance model, encryption strategy, or throughput mode. For more information see the [EFS documentation](https://docs.aws.amazon.com/efs/index.html). 
 
-## 3. Create EFS mount points in each availability zone
+## 3. Create EFS mount targets in each availability zone
 
-   1. Obtain subnet information for the default VPC using the [describe-subnets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-subnets.html) command. Provide the ```<Default VPC ID>``` obtained in section #1. Use jq to extract the default subnet IDs for later use. 
+EFS mount targets allow you to mount an Amazon EFS file system from your Lightsail instance. You should create a mount target for each availability zone (AZ) that your Lightsail instances are lcoated in . Lightsail instances should connect to the EFS mount target in the same AZ. 
 
-   ```
-   $ aws ec2 describe-subnets --filters Name=vpc-id,Values=<Default VPC ID> Name=default-for-az,Values=true | jq -r '.Subnets[].SubnetId'
+Obtain subnet information for the default VPC using the [describe-subnets](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-subnets.html) command. Provide the ```<Default VPC ID>``` obtained previously. Use jq to extract the ```<subnet X ID>```s for later use. 
 
-   <subnet 1 ID>
-   <subnet 2 ID>
-   ...
-   <subnet X ID>
-   ```
+```
+$ aws ec2 describe-subnets --filters Name=vpc-id,Values=<Default VPC ID> Name=default-for-az,Values=true | jq -r '.Subnets[].SubnetId'
 
-   2. Create an EFS mount point in each of the default subnets using the [create-mount-target](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/create-mount-target.html) command.  Use jq to extract the IP address of the mount point for later use.
-    subnet IDs for later use. 
+<subnet 1 ID>
+<subnet 2 ID>
+...
+<subnet X ID>
+```
 
-   ```
-   $ aws efs create-mount-target --file-system-id <EFS File System ID> --subnet-id <Subnet ID> | jq -r '.IpAddress'
-   
-   <EFS Mount Point IP Address>
-   ```
+Create an EFS mount target in each of the default subnets using the [create-mount-target](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/efs/create-mount-target.html) command.  Use jq to extract the ```<EFS Mount Point IP Address>``` for later use.
 
-   Do this for each ```<Subnet ID>``` reported in section #3.
+```
+$ aws efs create-mount-target --file-system-id <EFS File System ID> --subnet-id <Subnet ID> | jq -r '.IpAddress'
 
-   Note: If you don't have Lightsail instances in some availability zones (AZ), you don't need to craete a mount point in the subnet for that AZ. 
+<EFS Mount Point IP Address>
+```
+
+Do this for each ```<Subnet ID>``` obtained in the previous section.
+
+Note: If you don't have Lightsail instances in some AZs, you don't need to create a mount targets in those AZs. 
 
 ## 4. Create a rule allowing Lightsail to connect to EFS
 
-   1. Identify the VPC CIDR block for the Lightsail VPC using the [describe-vpc-peering-connections](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-vpc-peering-connections.html) command. Use jq to extract the VPC CIDR block for later use.
+Identify the VPC CIDR block for the Lightsail VPC using the [describe-vpc-peering-connections](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-vpc-peering-connections.html) command. Use jq to extract the ```<Lightsail VPC CIDR>``` block for later use.
 
-   ```
-   $ aws ec2 describe-vpc-peering-connections --filters Name=requester-vpc-info.vpc-id,Values=<Lightsail VPC ID> | jq -r '.VpcPeeringConnections[0].RequesterVpcInfo.CidrBlock'
+```
+$ aws ec2 describe-vpc-peering-connections --filters Name=requester-vpc-info.vpc-id,Values=<Lightsail VPC ID> | jq -r '.VpcPeeringConnections[0].RequesterVpcInfo.CidrBlock'
 
-   <Lightsail VPC CIDR>
-   ```
+<Lightsail VPC CIDR>
+```
 
-   2. Identify the default security group for the default VPC using the [describe-security-groups](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-security-groups.html) command. Use jq to extract the security group ID for later use.
+Identify the default security group for the default VPC using the [describe-security-groups](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-security-groups.html) command. Use jq to extract the ```<Default Security Group ID>``` for later use.
 
-   ```
-   $ aws ec2 describe-security-groups --filters Name=vpc-id,Values=<Default VPC ID> --group-names default | jq -r '.SecurityGroups[].GroupId'
+```
+$ aws ec2 describe-security-groups --filters Name=vpc-id,Values=<Default VPC ID> --group-names default | jq -r '.SecurityGroups[].GroupId'
 
-   <Default Security Group ID>
-   ```
+<Default Security Group ID>
+```
 
-   3. Create the security group rule with the [describe-security-groups](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-security-groups.html) command. 
+Create the security group rule with the [authorize-security-group-ingress](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/authorize-security-group-ingress.html) command. 
 
-   ```
-   $ aws ec2 authorize-security-group-ingress --group-id <Default Security Groupo ID> --protocol tcp --port 2049 --cidr <Lightsail VPC CIDR>
-   ```
+```
+$ aws ec2 authorize-security-group-ingress --group-id <Default Security Group ID> --protocol tcp --port 2049 --cidr <Lightsail VPC CIDR>
+```
 
-   This rule allows traffic from the Lightsail VPC on port 2049 (the default NFS port).
+This rule allows TCP traffic from the Lightsail VPC on port 2049 (the default NFS port).
 
 
 ## 5. Connect a Lightsail instance to the EFS file system
 
-   Connect to your Linux based Lightsail instance using your own compatible SSH client or connect using your browser from your instances [management page](https://lightsail.aws.amazon.com/ls/webapp/home/instances). For more information on connecting to your instance with SSH, visit the [SSH and connecting to your Lightsail instance](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/understanding-ssh-in-amazon-lightsail) page. 
+Connect to your Linux based Lightsail instance using your own compatible SSH client or connect using your browser from your instances [management page](https://lightsail.aws.amazon.com/ls/webapp/home/instances). For more information on connecting to your instance with SSH, visit the [SSH and connecting to your Lightsail instance](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/understanding-ssh-in-amazon-lightsail) page. 
 
-   1. Install the NFS client and mount the EFS file system. These commands must be executed using ```sudo```. Replace ```<EFS Mount Point IP Address>``` with the IP address obtained in step #3 for the availability zone your Lightsail instance is located in. 
+Note: The instructions below are for Ubuntu based systems. Similar commands may be used with other supported Linux systems.
 
-   ```
-   apt install nfs-common
-   mkdir /mnt/efs
-   mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport <EFS Mount Point IP Address>:/ /mnt/efs
-   ```
+Install the NFS client and mount the EFS file system. These commands must be executed using ```sudo```. Replace ```<EFS Mount Point IP Address>``` with the IP address obtained in step #3 for the availability zone your Lightsail instance is located in. 
 
-   2. Write a file to the shared file system
-   ```
-   touch /mnt/efs/sharedfile.txt
-   ```
+```
+apt install nfs-common
+mkdir /mnt/efs
+mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport <EFS Mount Point IP Address>:/ /mnt/efs
+```
 
-   3. Repeat step 1 for a different Linux based Lightsail instance in the same region. Be sure to use the EFS mount point for the availability zone the new instance is in. Verify you can read the file written by the first Lightsail instance
+Write a file to the shared file system
 
-   Congratulations. You have successfully connected your Lightsail instances to a shared EFS file system. 
+```
+touch /mnt/efs/sharedfile.txt
+```
+
+Repeat step 1 for a different Linux based Lightsail instance in the same region. Be sure to use the EFS mount point for the availability zone the different instance is in. Verify you can read the file written by the first Lightsail instance.
+
+Congratulations. You have successfully connected your Lightsail instances to a shared EFS file system. 
 
 
 ## Cleanup
 
 Complete the following steps to cleanup resources you created in this guide.
 
-Unpeer the Lightsail and default VPCs using the  [unpeer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/unpeer-vpc.html) command.
+Remove the security group rule using the [revoke-security-group-ingress](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/revoke-security-group-ingress.html) command.
+
+```
+$ aws ec2 revoke-security-group-ingress --group-id <Default Security Group ID> --protocol tcp --port 2049 --cidr <Lightsail VPC CIDR>
+```
+
+Unpeer the Lightsail and default VPCs using the [unpeer-vpc](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/unpeer-vpc.html) command.
 
 
 ```
@@ -136,3 +158,4 @@ Finally, delete the EFS file system using the [delete-file-system](https://awscl
 ```
 $ aws efs delete-file-system --file-system-id <EFS File System ID>
 ```
+
