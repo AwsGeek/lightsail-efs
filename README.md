@@ -4,7 +4,7 @@ Amazon Lightsail is a virtual private server (VPS) and is the easiest way to get
 
 Amazon EFS is a simple, serverless, set-and-forget, elastic file system that makes it easy to set up, scale, and cost-optimize file storage in the AWS Cloud.
 
-In this guide I'll show how create and connect to an EFS file system from one or more Lightsail instances using VPC peering. Multiple Lightsail instances can access the same shared EFS file system, enabling you to build more highly available and scalable applications on Lightsail.
+In this guide I'll show how create and connect to an EFS file system from Lightsail instances using VPC peering. Multiple Lightsail instances can access the same shared EFS file system over a VPC peering connection, enabling you to build more highly available and scalable applications on Lightsail.
 
 ![](lightsail-efs.png)
 
